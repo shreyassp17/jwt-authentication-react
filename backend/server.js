@@ -24,31 +24,43 @@ app.post('/login', (req, res) => {
             secure: true, // Ensures cookie is only sent over HTTPS
         });
 
-        res.json({ accessToken, refreshToken })
+        res.send({ accessToken, refreshToken })
     }
     catch (error) {
-        res.status(500).error(error)
+        res.status(500).json(error.message)
     }
 })
 
-app.get('/access-token', (req, res) => {
+app.post('/access-token', (req, res) => {
     try {
-        const refreshToken = req.body
-
+        const {refreshToken} = req.body
         if (!refreshToken) throw new Error("Refresh token not found")
+            console.log("Hello",refreshToken, refreshTokens)
 
         if (!refreshTokens.includes(refreshToken)) throw new Error("Refresh token expired")
 
         const user = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+        const {username, password} = user
+        const accessToken = generateAccessToken({username, password})
 
-        const accessToken = generateAccessToken(user)
-
-        res.json({ accessToken })
+        res.json(accessToken)
 
     }
     catch (error) {
-        res.status(500).error(error)
+        console.log(error.message)
+        res.status(500).json(error.message)
     }
+})
+
+app.post('/profile-details', (req, res) => {
+    const { accessToken } = req.body
+    try {
+        const user = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
+        res.json(user)
+    } catch (error) {
+        res.status(401).json(error.message)
+    }
+
 })
 
 module.exports = app

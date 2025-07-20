@@ -1,60 +1,76 @@
-import { useEffect, useState } from 'react'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+import { useAuth } from "./hooks/useAuth";
 
 function App() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const { isLoading, login, user, isAuthenticated, error } = useAuth();
+  console.log(useAuth());
+  const handleLogin = async (e: unknown) => {
+    e.preventDefault();
+    login(username, password);
+  };
 
-  const handleLogin = async(e) => {
-      e.preventDefault()
+  if (isLoading) {
+    return <p>Loading..</p>;
+  }
 
-        try {
-          const response = await fetch('http://localhost:8000/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, password }),
-        });
-
-        if (!response.ok) {
-        // Handle HTTP errors (e.g., 401 Unauthorized, 404 Not Found)
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
-        setIsLoggedIn(true)
-
-      }
-  
-        console.log(response)
-        setIsLoggedIn(true)
-      }
-      catch(err) {
-        console.log(err)
-        setIsLoggedIn(false)
-        }
+  if (error) {
+    return (
+      <p
+        style={{
+          fontWeight: "bold",
+          color: "red",
+        }}
+      >
+        {error + ""}
+      </p>
+    );
   }
 
   return (
     <div>
-      {!isLoggedIn && <form onSubmit={handleLogin}>
-        <label htmlFor="username">Username </label>
-        <input type="text" value={username} onChange={(e)=>setUsername(e.target.value)} name="username" id="username" autoComplete='username'/>
-        <br />
-        <br />
-        <label htmlFor="password">Password </label>
-        <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} name="password" id="password" autoComplete='new-password'/>
-        <br />
-        <br />
-        <button type="submit">Login</button>
-        </form>}
+      {!isAuthenticated && (
+        <form onSubmit={handleLogin}>
+          <label htmlFor="username">Username </label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            name="username"
+            id="username"
+            autoComplete="username"
+          />
+          <br />
+          <br />
+          <label htmlFor="password">Password </label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+            id="password"
+            autoComplete="new-password"
+          />
+          <br />
+          <br />
+          <button type="submit">Login</button>
+        </form>
+      )}
 
-      {isLoggedIn && <div>
-        <button>Show details</button>
-      </div>}
+      {isAuthenticated && (
+        <div>
+          <button>You are logged in</button>
+          <p>
+            <span style={{ fontWeight: "bold" }}>Username: </span>
+            {user?.username}
+          </p>
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
